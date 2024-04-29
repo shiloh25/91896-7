@@ -1,6 +1,6 @@
 import pandas
 import random
-
+from datetime import date
 
 # functions go here
 # checks that user response is not blank
@@ -147,39 +147,63 @@ mini_movie_frame['Profit'] = mini_movie_frame['Ticket Price'] - 5
 total = mini_movie_frame['Total'].sum()
 profit = mini_movie_frame['Profit'].sum()
 
+# choose winner name and look up total won
+winner_name = random.choice(all_names)
+win_index = all_names.index(winner_name)
+total_won = mini_movie_frame.at[win_index, 'Total']
+
 # currency formatting (uses currency function)
 add_dollars = ['Ticket Price', 'Surcharge', 'Total', 'Profit']
 for var_item in add_dollars:
     mini_movie_frame[var_item] = mini_movie_frame[var_item].apply(currency)
 
-# choose a winner from our name list
-winner_name = random.choice(all_names)
+# set index at end (before printing)
+mini_movie_frame = mini_movie_frame.set_index('Name')
 
-# get position of winner name in list
-win_index = all_names.index(winner_name)
+# get current date for heading and filename
+# get today's date
+today = date.today()
 
-# look up total amount won (ie ticket price + surcharge)
-total_won = mini_movie_frame.at[win_index, 'Total']
+# get day, month and year as individual strings
+day = today.strftime("%d")
+month = today.strftime("%m")
+year = today.strftime("%Y")
 
-print("----- Ticket Data -----")
-print()
+heading = "----- Mini Movie Fundraiser Ticket Data {}/{}/{} -----\n".format(day, month, year)
+filename = "MMF_{}_{}_{}".format(year, month, day)
 
-# output table with ticket data
-print(mini_movie_frame)
+# change frame to a string so that we can export it to a file
+mini_movie_string = pandas.DataFrame.to_string(mini_movie_frame)
 
-print()
-print("----- Ticket Cost / Profit -----")
+# create strings for printing
+ticket_cost_heading = "\n----- Ticket Cost / Profit -----"
+total_ticket_sales = "Total Ticket Sales: ${:.2f}".format(total)
+total_profit = "Total Profit: ${:.2f}".format(profit)
 
-# output total ticket sales and profit
-print("Total Ticket Sales: ${:.2f}".format(total))
-print("Total Profit: ${:.2f}".format(profit))
+# edit text below!! It needs to work if we have unsold tickets
+sales_status = "\n*** All the tickets have been sold ***"
 
-print()
-print('----- Raffle Winner -----')
-print("Congratulations {}. You have won ${} ie: your ticket is free!".format(winner_name, total_won))
+winner_heading = "\n----- Raffle Winner -----"
+winner_text = "The winner of the raffle is {}. They have won ${} ie: Their ticket is free!"\
+    .format(winner_name, total_won)
 
-# Output number of tickets sold
-if tickets_sold == MAX_TICKETS:
-    print("Congratulations you have sold all the tickets")
-else:
-    print("You have sold {} ticket/s. There is {} ticket/s remaining".format(tickets_sold, MAX_TICKETS - tickets_sold))
+# list holding content to print / write to file
+to_write = [heading, mini_movie_string, ticket_cost_heading,
+            total_ticket_sales, total_profit, sales_status,
+            winner_heading, winner_text]
+
+# print output
+for item in to_write:
+    print(item)
+
+# write output to file
+# create file to hold data (add .txt extension)
+write_to = "{}.txt".format(filename)
+text_file = open(write_to, "w+")
+
+for item in to_write:
+    text_file.write(item)
+    text_file.write("\n")
+
+# close file
+text_file.close()
